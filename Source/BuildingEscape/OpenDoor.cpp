@@ -19,11 +19,19 @@ void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	auto ObjRotation = GetOwner()->GetActorRotation().ToString();
-	UE_LOG(LogTemp, Warning, TEXT("Door rotation is: %s"), *ObjRotation);
-	
+	// ...
 }
 
+void UOpenDoor::OnDoorOpen()
+{
+	AActor* Owner = GetOwner();
+
+	FRotator NewRotation = FRotator(0.0f, 90.0f, 0.0f);
+	Owner->SetActorRotation(NewRotation);
+
+	auto ObjRotation = GetOwner()->GetActorRotation().ToString();
+	UE_LOG(LogTemp, Warning, TEXT("Door rotation is: %s"), *ObjRotation);
+}
 
 // Called every frame
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

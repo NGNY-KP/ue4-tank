@@ -19,6 +19,7 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	void OnDoorOpen();
 
 public:	
 	// Called every frame
