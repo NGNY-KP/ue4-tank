@@ -2,6 +2,7 @@
 
 #include "OpenDoor.h"
 #include "GameFramework/Actor.h"
+#include "Engine/World.h"
 
 // Sets default values for this component's properties
 UOpenDoor::UOpenDoor()
@@ -19,18 +20,20 @@ void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
+	RightIsTriggered = false;
+	LeftIsTriggered = false;
 }
 
-void UOpenDoor::OnDoorOpen()
+void UOpenDoor::OpenDoor()
 {
 	AActor* Owner = GetOwner();
 
-	FRotator NewRotation = FRotator(0.0f, 90.0f, 0.0f);
-	Owner->SetActorRotation(NewRotation);
+	//FRotator NewRotation = FRotator(0.0f, 90.0f, 0.0f);
 
-	auto ObjRotation = GetOwner()->GetActorRotation().ToString();
-	UE_LOG(LogTemp, Warning, TEXT("Door rotation is: %s"), *ObjRotation);
+	Owner->SetActorRotation(FRotator(0.0f, 30.0f, 0.0f));
+	Owner->SetActorRotation(FRotator(0.0f, 60.0f, 0.0f));
+	Owner->SetActorRotation(FRotator(0.0f, 90.0f, 0.0f));
 }
 
 // Called every frame
@@ -38,6 +41,17 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// ...
+	if (RightIsTriggered && LeftIsTriggered) {
+		OpenDoor();
+	} 
+	else if (TrigRight->IsOverlappingActor(ActorThatOpens)) 
+	{
+		RightIsTriggered = true;
+	} 
+	else if (TrigLeft->IsOverlappingActor(ActorThatOpens))
+	{
+		LeftIsTriggered = true;
+	}
+	
 }
 
