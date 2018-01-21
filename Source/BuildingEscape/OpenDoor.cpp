@@ -27,13 +27,24 @@ void UOpenDoor::BeginPlay()
 
 void UOpenDoor::OpenDoor()
 {
-	AActor* Owner = GetOwner();
+	Owner->SetActorRotation(FRotator(0.0f, OpenAngle, 0.0f));
+}
 
-	//FRotator NewRotation = FRotator(0.0f, 90.0f, 0.0f);
+void UOpenDoor::CloseDoor()
+{
+	Owner->SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
+}
 
-	Owner->SetActorRotation(FRotator(0.0f, 30.0f, 0.0f));
-	Owner->SetActorRotation(FRotator(0.0f, 60.0f, 0.0f));
-	Owner->SetActorRotation(FRotator(0.0f, 90.0f, 0.0f));
+void UOpenDoor::UpdateTriggerStatus(ATriggerVolume * Trigger, bool &TriggerProp)
+{
+	if (Trigger->IsOverlappingActor(ActorThatOpens)) 
+	{
+		TriggerProp = true;
+	} 
+	else
+	{ 
+		TriggerProp = false;
+	}
 }
 
 // Called every frame
@@ -41,17 +52,19 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (RightIsTriggered && LeftIsTriggered) {
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+
+	UpdateTriggerStatus(TrigRight, RightIsTriggered);
+	UpdateTriggerStatus(TrigLeft, LeftIsTriggered);
+
+	if (RightIsTriggered || LeftIsTriggered) {
 		OpenDoor();
+		LastDoorOpenTime = CurrentTime;
 	} 
-	else if (TrigRight->IsOverlappingActor(ActorThatOpens)) 
+	else if (CurrentTime - LastDoorOpenTime > DoorCloseDelay) 
 	{
-		RightIsTriggered = true;
-	} 
-	else if (TrigLeft->IsOverlappingActor(ActorThatOpens))
-	{
-		LeftIsTriggered = true;
+		CloseDoor();
 	}
 	
+		
 }
-
