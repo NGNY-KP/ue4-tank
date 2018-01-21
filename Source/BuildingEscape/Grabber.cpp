@@ -2,6 +2,7 @@
 
 #include "Grabber.h"
 #include "Engine/World.h"
+#include "Components/InputComponent.h"
 #include "DrawDebugHelpers.h"
 
 #define OUT
@@ -22,10 +23,45 @@ void UGrabber::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Warning, TEXT("Grabber is grabbing"));
-	
+	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
+
+	if (PhysicsHandle && InputComponent) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Grabber is grabbing"));
+	}
+
+	if (PhysicsHandle) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s has PhysicsHandleComponent"), *GetOwner()->GetName());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s is missing PhysicsHandleComponent"), *GetOwner()->GetName());	
+	}
+
+	if (InputComponent) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s has InputComponent"), *GetOwner()->GetName());
+		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
+		InputComponent->BindAction("Grab", IE_Released, this, &UGrabber::Release);
+	} 
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s is missing InputComponent"), *GetOwner()->GetName());	
+	}
+		
 }
 
+void UGrabber::Grab()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Grabbed"));
+}
+
+void UGrabber::Release()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Released"));
+}
 
 // Called every frame
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
