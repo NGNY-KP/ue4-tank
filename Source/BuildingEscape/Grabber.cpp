@@ -10,8 +10,6 @@
 // Sets default values for this component's properties
 UGrabber::UGrabber()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
@@ -23,72 +21,56 @@ void UGrabber::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+	CheckPhysicsHandler();
+	
+	SetupInputComponent();
+		
+}
+
+void UGrabber::SetupInputComponent()
+{
 	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
 
-	if (PhysicsHandle && InputComponent) 
+	if (InputComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Grabber is grabbing"));
+		UE_LOG(LogTemp, Warning, TEXT("%s has InputComponent"), *GetOwner()->GetName());
+		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
+		InputComponent->BindAction("Grab", IE_Released, this, &UGrabber::Release);
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s is missing InputComponent"), *GetOwner()->GetName());
+	}
+}
 
-	if (PhysicsHandle) 
+void UGrabber::CheckPhysicsHandler()
+{
+	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+
+	if (PhysicsHandle)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s has PhysicsHandleComponent"), *GetOwner()->GetName());
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s is missing PhysicsHandleComponent"), *GetOwner()->GetName());	
+		UE_LOG(LogTemp, Error, TEXT("%s is missing PhysicsHandleComponent"), *GetOwner()->GetName());
 	}
-
-	if (InputComponent) 
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s has InputComponent"), *GetOwner()->GetName());
-		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
-		InputComponent->BindAction("Grab", IE_Released, this, &UGrabber::Release);
-	} 
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s is missing InputComponent"), *GetOwner()->GetName());	
-	}
-		
 }
 
-void UGrabber::Grab()
+FHitResult UGrabber::GetFirstPhysicsBodyInReach() const
 {
-	UE_LOG(LogTemp, Warning, TEXT("Grabbed"));
-}
-
-void UGrabber::Release()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Released"));
-}
-
-// Called every frame
-void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
 	FVector PlayerViewPointLocation;
 	FRotator PlayerViewPointRotation;
-	
+
 	// Get player view point
 	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
-		OUT PlayerViewPointLocation, 
+		OUT PlayerViewPointLocation,
 		OUT PlayerViewPointRotation
 	);
 
-	/*UE_LOG
-	(
-		LogTemp, 
-		Warning, 
-		TEXT("Player view location is: %s \nPlayer view rotation is: %s"), 
-		*PlayerViewPointLocation.ToString(), 
-		*PlayerViewPointRotation.ToString()
-	);*/
-
 	/// Draw a red trace in the world to visualize
 	FVector LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
-	
+
 	DrawDebugLine
 	(
 		GetWorld(),
@@ -120,6 +102,64 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	AActor* ActorHit = Hit.GetActor();
 	if (ActorHit) {
 		UE_LOG(LogTemp, Warning, TEXT("Line trace hit %s"), *(ActorHit->GetName()));
-	}	
+	}
+
+	return Hit;
+}
+
+void UGrabber::Grab()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Grabbed"));
+
+	/// Try to reach grabbable object
+	auto HitResult = GetFirstPhysicsBodyInReach();
+	auto ComponentToGrab = HitResult.GetComponent();
+	auto ActorHit = HitResult.GetActor();
+
+	/// If it hits, attach a physics handle
+	if (ActorHit) 
+	{
+		// TODO attach physics handle
+		PhysicsHandle->GrabComponent(
+			ComponentToGrab,
+			NAME_None,
+			ComponentToGrab->GetOwner()->GetActorLocation(),
+			true // allow rotation
+		);
+	}
+		
+}
+
+void UGrabber::Release()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Released"));
+	// TODO Release physics handle
+	PhysicsHandle->ReleaseComponent();
+}
+
+// Called every frame
+void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	/// if the physics handle is attached
+	if (PhysicsHandle->GrabbedComponent)
+	{
+		FVector PlayerViewPointLocation;
+		FRotator PlayerViewPointRotation;
+
+		// Get player view point
+		GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+			OUT PlayerViewPointLocation,
+			OUT PlayerViewPointRotation
+		);
+
+		/// Draw a red trace in the world to visualize
+		FVector LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
+
+
+		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+	}
+		/// move the held object	
 }
 
