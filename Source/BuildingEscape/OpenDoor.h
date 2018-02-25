@@ -32,6 +32,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	float DoorCloseDelay = 1.f;
 
+	UPROPERTY(EditAnywhere)
+	float RequiredTriggerMass = 30.f;
 	float LastDoorOpenTime;
 
 	UPROPERTY(EditAnywhere)
@@ -44,8 +46,9 @@ private:
 	ATriggerVolume* TrigLeft;
 
 	AActor* Owner = GetOwner();
-	AActor* ActorThatOpens;
 
 	bool RightIsTriggered;
 	bool LeftIsTriggered;
+
+	float GetTotalMassOfActorsOnTrigger(ATriggerVolume*);
 };

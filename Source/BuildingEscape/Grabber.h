@@ -34,6 +34,8 @@ private:
 	UPhysicsHandleComponent* PhysicsHandle = nullptr;
 	UInputComponent* InputComponent = nullptr;
 
+	FTwoVectors GetLineTracePoints() const;
+
 	FHitResult GetFirstPhysicsBodyInReach() const;
 
 	void Grab();

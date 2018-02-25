@@ -3,6 +3,9 @@
 #include "OpenDoor.h"
 #include "GameFramework/Actor.h"
 #include "Engine/World.h"
+#include "Grabber.h"
+
+#define OUT
 
 // Sets default values for this component's properties
 UOpenDoor::UOpenDoor()
@@ -20,7 +23,6 @@ void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 	RightIsTriggered = false;
 	LeftIsTriggered = false;
 }
@@ -37,7 +39,7 @@ void UOpenDoor::CloseDoor()
 
 void UOpenDoor::UpdateTriggerStatus(ATriggerVolume * Trigger, bool &TriggerProp)
 {
-	if (Trigger->IsOverlappingActor(ActorThatOpens)) 
+	if (GetTotalMassOfActorsOnTrigger(Trigger) > RequiredTriggerMass) 
 	{
 		TriggerProp = true;
 	} 
@@ -45,6 +47,22 @@ void UOpenDoor::UpdateTriggerStatus(ATriggerVolume * Trigger, bool &TriggerProp)
 	{ 
 		TriggerProp = false;
 	}
+}
+
+float UOpenDoor::GetTotalMassOfActorsOnTrigger(ATriggerVolume * Trigger)
+{
+	float TotalMass = 0.f;
+
+	TArray<AActor*> OverlappingActors;
+	Trigger->GetOverlappingActors(OUT OverlappingActors);
+	
+	for (const auto* Actor : OverlappingActors)
+	{
+		TotalMass += Actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+		UE_LOG(LogTemp, Warning, TEXT("%s is on trigger"), *(Actor->GetName()));
+	}
+
+	return TotalMass;
 }
 
 // Called every frame
@@ -65,6 +83,4 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	{
 		CloseDoor();
 	}
-	
-		
 }
