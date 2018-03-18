@@ -29,7 +29,8 @@ void UOpenDoor::BeginPlay()
 
 void UOpenDoor::OpenDoor()
 {
-	Owner->SetActorRotation(FRotator(0.0f, OpenAngle, 0.0f));
+	// Owner->SetActorRotation(FRotator(0.0f, OpenAngle, 0.0f));
+	OnOpenRequest.Broadcast();
 }
 
 void UOpenDoor::CloseDoor()
@@ -72,7 +73,9 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	float CurrentTime = GetWorld()->GetTimeSeconds();
 
+	if (!TrigRight) { return; }
 	UpdateTriggerStatus(TrigRight, RightIsTriggered);
+	if (!TrigLeft) { return; }
 	UpdateTriggerStatus(TrigLeft, LeftIsTriggered);
 
 	if (RightIsTriggered || LeftIsTriggered) {
