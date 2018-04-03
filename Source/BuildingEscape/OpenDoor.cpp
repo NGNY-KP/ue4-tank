@@ -25,31 +25,25 @@ void UOpenDoor::BeginPlay()
 
 	RightIsTriggered = false;
 	LeftIsTriggered = false;
-}
+	CloseIsTriggered = false;
 
-void UOpenDoor::OpenDoor()
-{
-	// Owner->SetActorRotation(FRotator(0.0f, OpenAngle, 0.0f));
-	OnOpenRequest.Broadcast();
-}
+	if (!TrigRight) { UE_LOG(LogTemp, Warning, TEXT("No TrigRight")); }
+	if (!TrigLeft) { UE_LOG(LogTemp, Warning, TEXT("No TrigLeft")); }
+	if (!TrigClose) { UE_LOG(LogTemp, Warning, TEXT("No TrigClose")); }
 
-void UOpenDoor::CloseDoor()
-{
-	Owner->SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
+	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 }
 
 void UOpenDoor::UpdateTriggerStatus(ATriggerVolume * Trigger, bool &TriggerProp)
 {
-	if (GetTotalMassOfActorsOnTrigger(Trigger) > RequiredTriggerMass) 
+	if (!ActorThatOpens) { return; }
+	if (Trigger->IsOverlappingActor(ActorThatOpens)) 
 	{
 		TriggerProp = true;
 	} 
-	else
-	{ 
-		TriggerProp = false;
-	}
 }
 
+/* No longer used, kept for reference
 float UOpenDoor::GetTotalMassOfActorsOnTrigger(ATriggerVolume * Trigger)
 {
 	float TotalMass = 0.f;
@@ -65,25 +59,26 @@ float UOpenDoor::GetTotalMassOfActorsOnTrigger(ATriggerVolume * Trigger)
 
 	return TotalMass;
 }
+*/
 
 // Called every frame
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	float CurrentTime = GetWorld()->GetTimeSeconds();
-
 	if (!TrigRight) { return; }
 	UpdateTriggerStatus(TrigRight, RightIsTriggered);
 	if (!TrigLeft) { return; }
 	UpdateTriggerStatus(TrigLeft, LeftIsTriggered);
+	if (!TrigClose) { return; }
+	UpdateTriggerStatus(TrigClose, CloseIsTriggered);
 
-	if (RightIsTriggered || LeftIsTriggered) {
-		OpenDoor();
-		LastDoorOpenTime = CurrentTime;
+	if (CloseIsTriggered) {
+		RightIsTriggered = false;
+		LeftIsTriggered = false;
+		OnClose.Broadcast();
 	} 
-	else if (CurrentTime - LastDoorOpenTime > DoorCloseDelay) 
-	{
-		CloseDoor();
-	}
+	else if (RightIsTriggered && LeftIsTriggered) {
+		OnOpen.Broadcast();
+	} 
 }

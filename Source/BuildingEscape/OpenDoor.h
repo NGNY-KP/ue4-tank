@@ -8,6 +8,7 @@
 #include "OpenDoor.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnOpenRequest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCloseRequest);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BUILDINGESCAPE_API UOpenDoor : public UActorComponent
@@ -25,34 +26,36 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	void OpenDoor();
-	void CloseDoor();
+	
 	void UpdateTriggerStatus(ATriggerVolume* Trigger, bool &TriggerProp);
 
 	UPROPERTY(BlueprintAssignable)
-	FOnOpenRequest OnOpenRequest;
+		FOnOpenRequest OnOpen;
+	UPROPERTY(BlueprintAssignable)
+		FOnCloseRequest OnClose;
 
 private:
-	UPROPERTY(EditAnywhere)
-	float DoorCloseDelay = 1.f;
+
+	// No longer used, kept for reference
+	//UPROPERTY(EditAnywhere)
+	//	float RequiredTriggerMass = 30.f;
 
 	UPROPERTY(EditAnywhere)
-	float RequiredTriggerMass = 30.f;
-	float LastDoorOpenTime;
+		ATriggerVolume* TrigRight = nullptr;
 
 	UPROPERTY(EditAnywhere)
-	float OpenAngle = 90.f;
+		ATriggerVolume* TrigLeft = nullptr;
 
 	UPROPERTY(EditAnywhere)
-	ATriggerVolume* TrigRight = nullptr;
+		ATriggerVolume* TrigClose = nullptr;
 
-	UPROPERTY(EditAnywhere)
-	ATriggerVolume* TrigLeft = nullptr;
-
+	AActor* ActorThatOpens = nullptr;
 	AActor* Owner = GetOwner();
 
 	bool RightIsTriggered;
 	bool LeftIsTriggered;
+	bool CloseIsTriggered;
 
-	float GetTotalMassOfActorsOnTrigger(ATriggerVolume*);
+	// No longer used, kept for reference
+	// float GetTotalMassOfActorsOnTrigger(ATriggerVolume*);
 };
