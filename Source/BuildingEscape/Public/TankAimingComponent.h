@@ -6,8 +6,11 @@
 #include "Components/ActorComponent.h"
 #include "TankAimingComponent.generated.h"
 
+// Forward Decleration
+class UTankBarrel; // Holds barrel's properties and elevate method
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class BUILDINGESCAPE_API UTankAimingComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -16,7 +19,7 @@ public:
 	// Sets default values for this component's properties
 	UTankAimingComponent();
 
-	void SetBarrelReference(UStaticMeshComponent*);
+	void SetBarrelReference(UTankBarrel*);
 	void AimAt(FVector, float);
 
 protected:
@@ -27,6 +30,8 @@ private:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UStaticMeshComponent* Barrel = nullptr;
+	UTankBarrel* Barrel = nullptr;
+
+	void MoveBarrelTowards(FVector);
 	
 };
